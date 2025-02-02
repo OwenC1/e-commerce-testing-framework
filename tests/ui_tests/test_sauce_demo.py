@@ -1,9 +1,14 @@
 import pytest
+import os
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from page_objects.login_page import LoginPage
 from page_objects.inventory_page import InventoryPage
 from test_data.test_data import DataManager
-from config.environment import Environment
+from config.environment import Environment  # Add this import
 
 class TestSauceDemo:
     @pytest.fixture(scope="session")
@@ -78,3 +83,27 @@ class TestSauceDemo:
         # Test sorting
         inventory_page = InventoryPage(driver)
         inventory_page.sort_products(sort_option)
+
+    def test_logout(self, driver, env, test_data):
+        # Login first
+        login_page = LoginPage(driver)
+        login_page.navigate(env.base_url)
+        user = test_data.get_user_credentials('valid_user')
+        login_page.login(user['username'], user['password'])
+    
+        # Perform logout
+        inventory_page = InventoryPage(driver)
+        menu_button = driver.find_element(By.ID, "react-burger-menu-btn")
+        menu_button.click()
+    
+        # Wait for logout link and click
+        logout_link = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.ID, "logout_sidebar_link"))
+        )
+        logout_link.click()
+    
+        # Verify logout - check for login button instead of URL
+        login_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "login-button"))
+         )
+        assert login_button.is_displayed()
