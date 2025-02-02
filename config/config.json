@@ -1,0 +1,41 @@
+{
+    "dev": {
+        "base_url": "https://www.saucedemo.com",
+        "timeout": 10,
+        "browser": "chrome",
+        "headless": false,
+        "screenshot_dir": "reports/screenshots/dev",
+        "credentials": {
+            "standard_user": {
+                "username": "standard_user",
+                "password": "secret_sauce"
+            }
+        }
+    },
+    "staging": {
+        "base_url": "https://www.saucedemo.com",
+        "timeout": 15,
+        "browser": "chrome",
+        "headless": true,
+        "screenshot_dir": "reports/screenshots/staging",
+        "credentials": {
+            "standard_user": {
+                "username": "standard_user",
+                "password": "secret_sauce"
+            }
+        }
+    },
+    "prod": {
+        "base_url": "https://www.saucedemo.com",
+        "timeout": 20,
+        "browser": "chrome",
+        "headless": true,
+        "screenshot_dir": "reports/screenshots/prod",
+        "credentials": {
+            "standard_user": {
+                "username": "standard_user",
+                "password": "secret_sauce"
+            }
+        }
+    }
+}

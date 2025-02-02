@@ -1,0 +1,40 @@
+{
+    "users": {
+        "valid_user": {
+            "username": "standard_user",
+            "password": "secret_sauce"
+        },
+        "locked_user": {
+            "username": "locked_out_user",
+            "password": "secret_sauce"
+        },
+        "problem_user": {
+            "username": "problem_user",
+            "password": "secret_sauce"
+        }
+    },
+    "products": {
+        "backpack": {
+            "name": "Sauce Labs Backpack",
+            "price": 29.99,
+            "description": "carry.allTheThings() with the sleek, streamlined Sly Pack"
+        },
+        "bike_light": {
+            "name": "Sauce Labs Bike Light",
+            "price": 9.99,
+            "description": "A red light isn't the desired state in testing"
+        }
+    },
+    "test_scenarios": {
+        "cart": {
+            "single_item": ["backpack"],
+            "multiple_items": ["backpack", "bike_light"]
+        },
+        "sort_options": [
+            "Name (A to Z)",
+            "Name (Z to A)",
+            "Price (low to high)",
+            "Price (high to low)"
+        ]
+    }
+}
