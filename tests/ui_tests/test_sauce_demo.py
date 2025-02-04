@@ -109,4 +109,21 @@ class TestSauceDemo:
          )
         assert login_button.is_displayed()
 
+    def test_update_cart_quantity(self, driver, env, test_data):
+        """Test updating item quantity in cart"""
+        # Login first
+        login_page = LoginPage(driver)
+        login_page.navigate(env.base_url)
+        login_page.login("standard_user", "secret_sauce")
+        
+        # Add item to cart and update quantity
+        inventory_page = InventoryPage(driver)
+        inventory_page.add_item_to_cart("Sauce Labs Backpack")
+        inventory_page.add_item_to_cart("Sauce Labs Bike Light")
+        
+        # Assert cart quantity is 2
+        cart_badge = driver.find_element(By.CLASS_NAME, "shopping_cart_badge")
+        assert cart_badge.text == "2"
+
         # echo "# Adding a comment to test hook" >> tests/ui_tests/test_sauce_demo.py
+        # echo "practicing git worflow"
