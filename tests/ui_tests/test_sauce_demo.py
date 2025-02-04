@@ -101,9 +101,12 @@ class TestSauceDemo:
         EC.element_to_be_clickable((By.ID, "logout_sidebar_link"))
         )
         logout_link.click()
+        
     
         # Verify logout - check for login button instead of URL
         login_button = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.ID, "login-button"))
          )
         assert login_button.is_displayed()
+
+        # echo "# Adding a comment to test hook" >> tests/ui_tests/test_sauce_demo.py
