@@ -131,3 +131,27 @@ class TestReqResAPI:
         # For delete operations, we expect a 204 No Content response
         assert response.status_code == 204, \
             f"Expected 204 No Content status, got {response.status_code}"
+            
+    def test_get_single_user(self):
+        """
+        Test retrieving a single user's details from the API.
+        This verifies we can get detailed information about a specific user.
+        """
+        # Use user ID 2 for testing
+        user_id = 2
+        
+        # Make request to get user details
+        response = requests.get(f"{self.BASE_URL}/users/{user_id}")
+        
+        # Verify successful response
+        assert response.status_code == 200, "Should return 200 OK status"
+        
+        # Extract user data from response
+        user_data = response.json()["data"]
+        
+        # Verify user structure
+        assert user_data["id"] == user_id, "User ID should match requested ID"
+        assert "email" in user_data, "User should have email"
+        assert "first_name" in user_data, "User should have first name"
+        assert "last_name" in user_data, "User should have last name"
+        assert "avatar" in user_data, "User should have avatar URL"
