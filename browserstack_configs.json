@@ -1,0 +1,27 @@
+{
+    "environments": [
+      {
+        "name": "Chrome_Windows10",
+        "browser": "chrome",
+        "browser_version": "latest",
+        "os": "Windows",
+        "os_version": "10",
+        "resolution": "1920x1080"
+      },
+      {
+        "name": "Firefox_MacOS",
+        "browser": "firefox",
+        "browser_version": "latest",
+        "os": "OS X",
+        "os_version": "Ventura",
+        "resolution": "1920x1080"
+      },
+      {
+        "name": "iPhone13",
+        "device": "iPhone 13",
+        "real_mobile": true,
+        "os": "iOS",
+        "os_version": "15"
+      }
+    ]
+  }

@@ -1,0 +1,6 @@
+version: '3'
+services:
+  tests:
+    build: .
+    mem_limit: 2g
+    cpus: 2

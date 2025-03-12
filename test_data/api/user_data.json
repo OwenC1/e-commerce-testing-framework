@@ -1,0 +1,25 @@
+
+{
+    "create_users": [
+        {
+            "name": "John Doe",
+            "job": "Developer",
+            "expected_status": 201
+        },
+        {
+            "name": "Jane Smith",
+            "job": "QA Engineer",
+            "expected_status": 201
+        },
+        {
+            "name": "Bob Johnson",
+            "job": "Manager",
+            "expected_status": 201
+        }
+    ],
+    "user_ids": [1, 2, 3, 4, 5],
+    "update_user": {
+        "name": "Updated Name",
+        "job": "Updated Job"
+    }
+}

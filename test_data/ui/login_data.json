@@ -1,0 +1,34 @@
+
+{
+    "valid_login": {
+        "username": "standard_user",
+        "password": "secret_sauce",
+        "expected_result": "success",
+        "expected_url": "inventory.html"
+    },
+    "locked_user": {
+        "username": "locked_out_user",
+        "password": "secret_sauce",
+        "expected_result": "failure",
+        "expected_error": "Sorry, this user has been locked out"
+    },
+    "invalid_password": {
+        "username": "standard_user",
+        "password": "wrong_password",
+        "expected_result": "failure",
+        "expected_error": "Username and password do not match"
+    },
+    "empty_username": {
+        "username": "",
+        "password": "secret_sauce",
+        "expected_result": "failure",
+        "expected_error": "Username is required"
+    },
+    "empty_password": {
+        "username": "standard_user",
+        "password": "",
+        "expected_result": "failure",
+        "expected_error": "Password is required"
+    }
+    
+}
