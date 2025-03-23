@@ -3,40 +3,52 @@ from selenium.webdriver.common.by import By
 from .base_page import BasePage
 
 class CartPage(BasePage):
-    # Locators
-    CART_ITEMS = (By.CLASS_NAME, "cart_item")
-    ITEM_NAME = (By.CLASS_NAME, "inventory_item_name")
-    REMOVE_BUTTON = (By.XPATH, "//button[text()='Remove']")
-    CONTINUE_SHOPPING_BUTTON = (By.ID, "continue-shopping")
+    # Locators - these are specific to the Cart page
     CHECKOUT_BUTTON = (By.ID, "checkout")
+    CONTINUE_SHOPPING_BUTTON = (By.ID, "continue-shopping")
+    CART_ITEMS = (By.CLASS_NAME, "cart_item")
+    REMOVE_BUTTON = (By.XPATH, "//button[text()='Remove']")
+    ITEM_NAME = (By.CLASS_NAME, "inventory_item_name")
+    ITEM_PRICE = (By.CLASS_NAME, "inventory_item_price")
     
     def __init__(self, driver):
+        # Reusing code: This constructor calls the parent BasePage constructor
         super().__init__(driver)
     
-    def get_cart_items(self):
-        """Get all items currently in the cart"""
-        items = self.driver.find_elements(*self.CART_ITEMS)
-        return [item.find_element(*self.ITEM_NAME).text for item in items]
-    
-    def remove_item(self, item_name):
-        """Remove a specific item from the cart"""
-        # Find the cart item container that contains this item name
-        item_xpath = f"//div[@class='cart_item'][.//div[@class='inventory_item_name' and text()='{item_name}']]"
-        item_container = self.driver.find_element(By.XPATH, item_xpath)
-        
-        # Find and click the remove button within this container
-        remove_button = item_container.find_element(*self.REMOVE_BUTTON)
-        self.click(remove_button)
+    def proceed_to_checkout(self):
+        # Reusing code: This uses the click method from BasePage
+        self.click(self.CHECKOUT_BUTTON)
     
     def continue_shopping(self):
-        """Click the continue shopping button and return to inventory page"""
+        # Reusing code: This uses the click method from BasePage
         self.click(self.CONTINUE_SHOPPING_BUTTON)
-        from .inventory_page import InventoryPage
-        return InventoryPage(self.driver)
     
-    def checkout(self):
-        """Click the checkout button and proceed to checkout"""
-        self.click(self.CHECKOUT_BUTTON)
-        # Assuming we have a CheckoutPage class
-        from .checkout_page import CheckoutPage
-        return CheckoutPage(self.driver)
+    def remove_item(self, item_index=0):
+        # New code: This is specific to the cart page functionality
+        remove_buttons = self.driver.find_elements(*self.REMOVE_BUTTON)
+        if len(remove_buttons) > item_index:
+            remove_buttons[item_index].click()
+    
+    def get_cart_items(self):
+        # New code: This provides cart-specific functionality
+        items = self.driver.find_elements(*self.CART_ITEMS)
+        cart_contents = []
+        
+        for item in items:
+            name = item.find_element(By.CLASS_NAME, "inventory_item_name").text
+            price = item.find_element(By.CLASS_NAME, "inventory_item_price").text
+            cart_contents.append({"name": name, "price": price})
+            
+        return cart_contents
+    
+    def get_total_price(self):
+        # New code: Calculate the total price of items in cart
+        items = self.get_cart_items()
+        total = 0
+        
+        for item in items:
+            # Convert price from "$29.99" format to float
+            price = float(item["price"].replace("$", ""))
+            total += price
+            
+        return total

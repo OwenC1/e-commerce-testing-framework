@@ -19,14 +19,12 @@ class InventoryPage(BasePage):
         return self.get_text(self.TITLE)
 
     def sort_products(self, sort_option):
-        """Sort products using the dropdown selector"""
-        # First, click the dropdown to open it
-        self.click(self.SORT_DROPDOWN)
-    
-        # Now select the specific option based on value
-        option_xpath = f"//option[@value='{sort_option}']"
-        option = (By.XPATH, option_xpath)
-        self.click(option)
+         # Find the dropdown element
+         sort_dropdown = self.find_element(self.SORT_DROPDOWN)
+         # Use Select class to handle the dropdown properly
+         select = Select(sort_dropdown)
+         # Select by visible text
+         select.select_by_visible_text(sort_option)
         
 
     def add_item_to_cart(self, item_name):

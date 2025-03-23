@@ -36,5 +36,12 @@
             "Price (low to high)",
             "Price (high to low)"
         ]
+    },
+    "customers": {
+        "standard_customer": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "zip_code": "12345"
+        }
     }
 }

@@ -22,3 +22,8 @@ class DataManager:  # Changed from TestDataManager to DataManager
 
     def get_sort_options(self):
         return self.test_data['test_scenarios']['sort_options']
+    
+    # test_data/test_data.py
+    def get_data(self, category, key):
+        """Get data from any category in the test data file"""
+        return self.test_data.get(category, {}).get(key, {})
