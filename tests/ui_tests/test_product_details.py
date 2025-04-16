@@ -6,7 +6,7 @@ from page_objects.inventory_page import InventoryPage
 class TestProductDetails:
     """Tests for the product details functionality"""
     
-    def test_view_product_details(self, driver, env, test_data):
+    def test_view_product_details(self, browser, env, test_data):
         """
         Test that a user can view product details.
         

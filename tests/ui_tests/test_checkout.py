@@ -19,13 +19,13 @@ class TestCheckout:
         product = test_data.get_product_details('backpack')
         inventory_page.add_item_to_cart(product['name'])
         
-        # Go to cart
+        # Go to cart 
         inventory_page.go_to_cart()
         
         return driver, test_data
     
-    def test_successful_checkout(self, driver, env, test_data, setup_checkout):
-        # Get setup data
+    def test_successful_checkout(self, browser, env, test_data, setup_checkout):
+        # Get setup datas
         driver, test_data = setup_checkout
         
         # Proceed from cart to checkout

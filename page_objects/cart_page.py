@@ -1,6 +1,8 @@
 # page_objects/cart_page.py
 from selenium.webdriver.common.by import By
 from .base_page import BasePage
+from page_objects.inventory_page import InventoryPage
+
 
 class CartPage(BasePage):
     # Locators - these are specific to the Cart page
@@ -22,12 +24,16 @@ class CartPage(BasePage):
     def continue_shopping(self):
         # Reusing code: This uses the click method from BasePage
         self.click(self.CONTINUE_SHOPPING_BUTTON)
+        return InventoryPage(self.driver)
+        
     
-    def remove_item(self, item_index=0):
-        # New code: This is specific to the cart page functionality
-        remove_buttons = self.driver.find_elements(*self.REMOVE_BUTTON)
-        if len(remove_buttons) > item_index:
-            remove_buttons[item_index].click()
+    def remove_item(self, item_name):
+       #Removes an item from the cart using the item's name.
+       # Example: "Sauce Labs Backpack" → "remove-sauce-labs-backpack"
+        item_id = item_name.lower().replace(" ", "-")
+        button_id = f"remove-{item_id}"
+        button = self.driver.find_element(By.ID, button_id)
+        button.click()
     
     def get_cart_items(self):
         # New code: This provides cart-specific functionality

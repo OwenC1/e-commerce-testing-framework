@@ -31,25 +31,34 @@ class InventoryPage(BasePage):
         """Find an item by name and add it to the cart"""
         print(f"Looking for item: {item_name}")
     
-        # Wait for the inventory container to be visible
+        # Wait for inventory page to load
         self.wait.until(EC.visibility_of_element_located((By.CLASS_NAME, "inventory_container")))
+    
+        try:
+          # Construct direct button ID dynamically
+          item_id = item_name.lower().replace(" ", "-")
+          button_id = f"add-to-cart-{item_id}"
+          print(f"Trying direct button ID: {button_id}")
         
-        # Try a simpler selector first
-        button_id = f"add-to-cart-sauce-labs-backpack"
-        if item_name == "Sauce Labs Backpack":
-            print(f"Using direct button ID: {button_id}")
-            add_button = self.driver.find_element(By.ID, button_id)
-            self.click(add_button)
-            return
+          add_button = WebDriverWait(self.driver, 5).until(
+             EC.element_to_be_clickable((By.ID, button_id))
+          )
+          add_button.click()
+          print("Clicked add-to-cart button using ID.")
+    
+        except Exception as e:
+          print(f"Direct ID not found or not clickable: {e}")
+          print("Falling back to XPath method.")
         
-        # If it's not the backpack, use a more dynamic approach
-        # Use a more precise XPath that matches the current structure of the site
-        item_xpath = f"//div[contains(@class, 'inventory_item_name') and text()='{item_name}']/ancestor::div[contains(@class, 'inventory_item')]"
-        print(f"Using XPath: {item_xpath}")
+          # Fallback: locate item card and add-to-cart button using XPath
+          item_xpath = f"//div[contains(@class, 'inventory_item_name') and text()='{item_name}']/ancestor::div[contains(@class, 'inventory_item')]"
         
-        item_container = self.driver.find_element(By.XPATH, item_xpath)
-        add_button = item_container.find_element(By.XPATH, ".//button[contains(@id, 'add-to-cart')]")
-        self.click(add_button)
+          item_container = WebDriverWait(self.driver, 5).until(
+             EC.presence_of_element_located((By.XPATH, item_xpath))
+          )
+          add_button = item_container.find_element(By.XPATH, ".//button[contains(@id, 'add-to-cart')]")
+          add_button.click()
+          print("Clicked add-to-cart button using XPath.")
 
     def get_cart_count(self):
         try:

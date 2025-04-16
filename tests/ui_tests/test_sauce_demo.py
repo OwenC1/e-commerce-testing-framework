@@ -121,8 +121,12 @@ class TestSauceDemo:
         inventory_page.add_item_to_cart("Sauce Labs Backpack")
         inventory_page.add_item_to_cart("Sauce Labs Bike Light")
         
-        # Assert cart quantity is 2
+        WebDriverWait(driver, 5).until(
+        EC.text_to_be_present_in_element((By.CLASS_NAME, "shopping_cart_badge"), "2")
+        )
+        
         cart_badge = driver.find_element(By.CLASS_NAME, "shopping_cart_badge")
+        print(f"Cart badge shows: {cart_badge.text}")
         assert cart_badge.text == "2"
 
         # echo "# Adding a comment to test hook" >> tests/ui_tests/test_sauce_demo.py

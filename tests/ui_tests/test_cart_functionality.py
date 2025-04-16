@@ -37,7 +37,9 @@ class TestCartFunctionality:
         
         # Verify the item is in the cart
         cart_items = cart_page.get_cart_items()
-        assert test_item in cart_items, f"Expected {test_item} to be in the cart, but found: {cart_items}"
+        #assert test_item in cart_items, f"Expected {test_item} to be in the cart, but found: {cart_items}"
+        assert any(item["name"] == test_item for item in cart_items), \
+            f"Expected {test_item} to be in the cart, but found: {cart_items}"
         
         # Remove the item from the cart
         cart_page.remove_item(test_item)
