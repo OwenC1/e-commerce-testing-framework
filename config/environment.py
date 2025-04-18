@@ -25,7 +25,15 @@ class Environment:
     def get_browser_options(self):
         options = Options()
         if self.config['headless']:
-            options.add_argument('--headless')
+           options.add_argument('--headless')
+    
+    # Remove any binary_location setting if it exists
+    # Don't set options.binary_location to a specific path
+    
+    # Add stability options
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+    
         return options
 
     def get_credentials(self, user_type):

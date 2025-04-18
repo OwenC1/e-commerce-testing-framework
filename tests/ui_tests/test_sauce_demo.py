@@ -1,5 +1,6 @@
 import pytest
 import os
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -84,30 +85,60 @@ class TestSauceDemo:
         inventory_page = InventoryPage(driver)
         inventory_page.sort_products(sort_option)
 
-    def test_logout(self, driver, env, test_data):
+    def test_logout(self, browser, env, test_data):  # If this is a class method, keep self
+        """Test logout functionality"""
         # Login first
-        login_page = LoginPage(driver)
+        login_page = LoginPage(browser)
         login_page.navigate(env.base_url)
         user = test_data.get_user_credentials('valid_user')
         login_page.login(user['username'], user['password'])
     
-        # Perform logout
-        inventory_page = InventoryPage(driver)
-        menu_button = driver.find_element(By.ID, "react-burger-menu-btn")
-        menu_button.click()
-    
-        # Wait for logout link and click
-        logout_link = WebDriverWait(driver, 10).until(
-        EC.element_to_be_clickable((By.ID, "logout_sidebar_link"))
+        # Verify we're logged in
+        WebDriverWait(browser, 10).until(
+           EC.url_contains("inventory.html")
         )
-        logout_link.click()
-        
+        print("Logged in successfully")
     
-        # Verify logout - check for login button instead of URL
-        login_button = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.ID, "login-button"))
-         )
-        assert login_button.is_displayed()
+        # Click menu button with JavaScript for reliability
+        menu_button = WebDriverWait(browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "react-burger-menu-btn"))
+        )
+        browser.execute_script("arguments[0].click();", menu_button)
+        print("Clicked menu button")
+    
+        # Wait for menu to fully open
+        time.sleep(1)
+    
+        # Click logout with JavaScript
+        logout_link = WebDriverWait(browser, 10).until(
+            EC.element_to_be_clickable((By.ID, "logout_sidebar_link"))
+        )
+        browser.execute_script("arguments[0].click();", logout_link)
+        print("Clicked logout link")
+    
+        # Wait for redirect to complete
+        time.sleep(1)
+    
+        # Verify we're back at login page
+        try:
+           # Check URL first
+           WebDriverWait(browser, 10).until(
+              lambda driver: "saucedemo.com" in driver.current_url and 
+                          ("index.html" in driver.current_url or 
+                           driver.current_url.endswith("/"))
+            )
+           print(f"Redirected to: {browser.current_url}")
+        
+            # Then check for login button
+           login_button = WebDriverWait(browser, 10).until(
+                EC.visibility_of_element_located((By.ID, "login-button"))
+            )
+           assert login_button.is_displayed()
+           print("Login button found, logout successful")
+        except Exception as e:
+            print(f"Logout verification failed: {e}")
+            browser.save_screenshot("logout_failure.png")
+            raise
 
     def test_update_cart_quantity(self, driver, env, test_data):
         """Test updating item quantity in cart"""

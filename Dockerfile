@@ -1,17 +1,20 @@
-# Start with the base Python image - this gives us a clean Python installation
-FROM --platform=linux/arm64 python:3.9-slim
+# Use the official Selenium image with Chrome preinstalled (headless + ARM-compatible)
+FROM selenium/standalone-chrome:120.0
 
-# Set up a working directory in the container - like creating a dedicated workspace
+# Set working directory
 WORKDIR /app
 
-# Copy your requirements file first - this helps with caching during builds
+# Install Python and pip (already available in the base image, but ensure it's set)
+RUN apt-get update && apt-get install -y python3-pip && apt-get clean
+
+# Copy only requirements first to cache dependencies
 COPY requirements.txt .
 
-# Install all your Python dependencies
-RUN pip install -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy all your project files into the container
+# Now copy your project files
 COPY . .
 
-# Command that will run when the container starts
-CMD ["pytest", "tests/"]
+# Run tests (can be overridden)
+CMD ["pytest", "tests/ui_tests", "--html=reports/test_report.html", "--self-contained-html"]

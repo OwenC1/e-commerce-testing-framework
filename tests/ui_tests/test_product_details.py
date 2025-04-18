@@ -17,7 +17,7 @@ class TestProductDetails:
         """
         # --- ARRANGE ---
         # Start by navigating to the site and logging in
-        login_page = LoginPage(driver)
+        login_page = LoginPage(browser)
         login_page.navigate(env.base_url)
         
         # Get user credentials from test data
@@ -26,7 +26,7 @@ class TestProductDetails:
         
         # --- ACT ---
         # Once logged in, we should be on the inventory page
-        inventory_page = InventoryPage(driver)
+        inventory_page = InventoryPage(browser)
         
         # Select a specific product to test with
         product_name = "Sauce Labs Backpack"
@@ -38,20 +38,20 @@ class TestProductDetails:
         # --- ASSERT ---
         # Verify we're on the correct page
         # First, check the URL contains the expected pattern
-        assert "inventory-item.html" in driver.current_url
+        assert "inventory-item.html" in browser.current_url
         
         # Check that the product name is displayed correctly
-        product_title = driver.find_element(By.CLASS_NAME, "inventory_details_name").text
+        product_title = browser.find_element(By.CLASS_NAME, "inventory_details_name").text
         assert product_title == product_name
         
         # Verify that product has a description
-        product_description = driver.find_element(By.CLASS_NAME, "inventory_details_desc").text
+        product_description = browser.find_element(By.CLASS_NAME, "inventory_details_desc").text
         assert product_description != ""
         
         # Verify that product has a price
-        product_price = driver.find_element(By.CLASS_NAME, "inventory_details_price").text
+        product_price = browser.find_element(By.CLASS_NAME, "inventory_details_price").text
         assert "$" in product_price
         
         # Verify that the "Add to cart" button is present
-        add_to_cart_button = driver.find_element(By.CSS_SELECTOR, "button[id^='add-to-cart']")
+        add_to_cart_button = browser.find_element(By.CSS_SELECTOR, "button[id^='add-to-cart']")
         assert add_to_cart_button.is_displayed()

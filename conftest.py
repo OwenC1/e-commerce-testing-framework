@@ -1,96 +1,23 @@
-import pytest
 import os
+import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from page_objects.login_page import LoginPage
-from page_objects.inventory_page import InventoryPage
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+# Use webdriver_manager to handle driver installation
+from webdriver_manager.chrome import ChromeDriverManager
+from page_objects.login_page import LoginPage
+from page_objects.inventory_page import InventoryPage
+from config.environment import Environment
 
-@pytest.fixture(scope="session")
-def browser():
-    """
-    Create a WebDriver instance for the entire test session.
-    
-    This fixture creates a single browser instance that will be reused across
-    all tests in the session, which significantly improves test execution time.
-    """
-    options = Options()
-    
-    # Add additional options as needed
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    
-    # Ensure the browser is visible and doesn't close automatically
-    options.add_experimental_option("detach", True)  # Keep browser open after test
-    
-    # Make sure no headless mode is enabled
-    options.add_argument("--window-size=1920,1080")  # Set a specific window size
-    
-    # Create the driver
-    driver = webdriver.Chrome(options=options)
-    driver.maximize_window()
-    
-    # Yield the driver to tests
-    yield driver
-    
-    # Quit the driver after all tests are complete
-    driver.quit()
 
-@pytest.fixture
-def setup(browser):
-    """
-    Setup for each test - navigates to the website.
-    
-    This uses the session-scoped browser fixture but navigates
-    to a fresh page for each test.
-    """
-    browser.get("https://www.saucedemo.com/")
-    return browser
-
-@pytest.fixture
-def logged_in_browser(browser):
-    """
-    Setup for tests requiring logged in state.
-    
-    This fixture handles the login process to prepare the browser
-    for tests that need to start from a logged-in state.
-    """
-    browser.get("https://www.saucedemo.com/")
-    login_page = LoginPage(browser)
-    login_page.login("standard_user", "secret_sauce")
-    return browser
-
-@pytest.fixture
-def inventory_page(logged_in_browser):
-    """
-    Initialize the inventory page after login.
-    
-    This fixture provides a pre-configured InventoryPage object 
-    that tests can use directly without handling login.
-    """
-    return InventoryPage(logged_in_browser)
-
-@pytest.fixture
-def inventory_page(browser):
-    """Initialize the inventory page after login"""
-    browser.get("https://www.saucedemo.com/")
-    
-    # Create login page and log in
-    from page_objects.login_page import LoginPage
-    login_page = LoginPage(browser)
-    login_page.login("standard_user", "secret_sauce")
-    
-    # Verify we're on the inventory page
-    WebDriverWait(browser, 10).until(
-        EC.url_contains("inventory.html")
-    )
-    
-    # Create and return the inventory page
-    from page_objects.inventory_page import InventoryPage
-    return InventoryPage(browser)
-
+# ----------------------------
+# Custom CLI options for pytest
+# These let you switch between local and BrowserStack easily
+# Example: pytest --use_browserstack --browser chrome
+# ----------------------------
 def pytest_addoption(parser):
     parser.addoption("--use_browserstack", action="store_true", default=False,
                      help="Run tests on BrowserStack")
@@ -108,72 +35,162 @@ def pytest_addoption(parser):
                      help="Use real mobile device instead of emulator")
     parser.addoption("--resolution", action="store", default="1920x1080",
                      help="Screen resolution")
+    parser.addoption("--headless", action="store_true", default=False,
+                     help="Run in headless mode")
 
-@pytest.fixture(scope="session")
-def browser(request):
+
+# Hook to capture test status for screenshots
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    rep = outcome.get_result()
+    setattr(item, f"rep_{rep.when}", rep)
+
+
+@pytest.fixture(scope="function")
+def env():
+    """Return the environment configuration"""
+    return Environment()
+
+
+# ----------------------------
+# Main browser fixture
+# Creates a WebDriver instance (local or BrowserStack)
+# ----------------------------
+@pytest.fixture(scope="function")
+def browser(request, env):
     use_browserstack = request.config.getoption("--use_browserstack")
-    
+    headless = request.config.getoption("--headless")
+
+    # If running on BrowserStack
     if use_browserstack:
-        # BrowserStack configuration
-        browserstack_username = os.environ.get("BROWSERSTACK_USERNAME")
-        browserstack_access_key = os.environ.get("BROWSERSTACK_ACCESS_KEY")
-        
-        browser_name = request.config.getoption("--browser")
-        browser_version = request.config.getoption("--browser_version")
-        os_name = request.config.getoption("--os")
-        os_version = request.config.getoption("--os_version")
-        device = request.config.getoption("--device")
-        real_mobile = request.config.getoption("--real_mobile")
-        resolution = request.config.getoption("--resolution")
-        
-        # Build capabilities for BrowserStack
-        capabilities = {}
-        
-        # For mobile testing
-        if device:
-            capabilities.update({
-                'browserName': browser_name if browser_name != "chrome" else "chrome",
-                'deviceName': device,
-                'realMobile': 'true' if real_mobile else 'false',
-                'osVersion': os_version,
-            })
-        # For desktop testing
-        else:
-            capabilities.update({
-                'browserName': browser_name,
-                'browserVersion': browser_version,
-                'os': os_name,
-                'osVersion': os_version,
-                'resolution': resolution,
-            })
-        
-        # Common capabilities
-        capabilities.update({
-            'projectName': 'E-Commerce Testing Framework',
-            'buildName': 'Build 1.0',
-            'sessionName': 'Test Run',
-            'local': 'false',
-            'seleniumVersion': '4.0.0',
-            'debug': 'true',
-            'networkLogs': 'true',
-            'consoleLogs': 'info'
-        })
-        
-        # BrowserStack URL with authentication
-        url = f'https://{browserstack_username}:{browserstack_access_key}@hub-cloud.browserstack.com/wd/hub'
-        
-        # Create remote WebDriver instance
-        options = webdriver.ChromeOptions()
-        options.set_capability('bstack:options', capabilities)
-        driver = webdriver.Remote(command_executor=url, options=options)
-        
+        browserstack_username = os.getenv("BROWSERSTACK_USERNAME")
+        browserstack_access_key = os.getenv("BROWSERSTACK_ACCESS_KEY")
+
+        capabilities = {
+            "browserName": request.config.getoption("--browser"),
+            "browserVersion": request.config.getoption("--browser_version"),
+            "bstack:options": {
+                "os": request.config.getoption("--os"),
+                "osVersion": request.config.getoption("--os_version"),
+                "projectName": "E-Commerce Testing Framework",
+                "buildName": "Build 1.0",
+                "sessionName": "Test Run",
+                "local": "false",
+                "seleniumVersion": "4.0.0",
+                "debug": "true",
+                "networkLogs": "true",
+                "consoleLogs": "info"
+            }
+        }
+
+        # BrowserStack remote URL with credentials
+        url = f"https://{browserstack_username}:{browserstack_access_key}@hub-cloud.browserstack.com/wd/hub"
+        driver = webdriver.Remote(command_executor=url, desired_capabilities=capabilities)
+
     else:
-        # Local WebDriver (your existing implementation)
-        options = webdriver.ChromeOptions()
+        # Local Chrome WebDriver configuration
+        options = Options()
+        # Optional: Only set binary_location if Chrome is not in standard location
+        # Use the actual path to Chrome on your machine if needed
+        # options.binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        driver = webdriver.Chrome(options=options)
-        driver.maximize_window()
+        if headless:
+            options.add_argument("--headless=new")  # Updated headless flag for newer Chrome versions
+        options.add_argument("--window-size=1920,1080")
+        
+        try:
+            # Use WebDriver Manager to install ChromeDriver
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=options)
+        except Exception as e:
+            print(f"Error creating Chrome driver with WebDriverManager: {e}")
+            # Fallback to default Chrome driver
+            driver = webdriver.Chrome(options=options)
+
+    # Maximize browser window
+    driver.maximize_window()
     
+    # Set implicit wait from environment config
+    driver.implicitly_wait(env.timeout)
+
+    # Yield WebDriver instance to tests
     yield driver
+
+    # Take screenshot on failure
+    if hasattr(request.node, "rep_call") and request.node.rep_call.failed:
+        screenshot_dir = env.get_screenshot_dir()
+        os.makedirs(screenshot_dir, exist_ok=True)
+        screenshot_path = os.path.join(screenshot_dir, f"{request.node.name}.png")
+        try:
+            driver.save_screenshot(screenshot_path)
+            print(f"Screenshot saved to {screenshot_path}")
+        except Exception as e:
+            print(f"Failed to take screenshot: {e}")
+
+    # Quit browser after tests finish
     driver.quit()
+
+
+# ----------------------------
+# Base fixture: Open home page
+# ----------------------------
+@pytest.fixture
+def setup(browser, env):
+    """
+    Setup for each test - navigates to the website.
+    """
+    browser.get(env.base_url)
+    return browser
+
+
+# ----------------------------
+# Fixture: Login and return browser
+# Useful for tests that need to start from a logged-in state
+# ----------------------------
+@pytest.fixture
+def logged_in_browser(browser, env):
+    """
+    Setup for tests requiring logged in state.
+    """
+    browser.get(env.base_url)
+    login_page = LoginPage(browser)
+    
+    # Get credentials from environment
+    user_creds = env.get_credentials('standard_user')
+    username = user_creds.get('username', 'standard_user')
+    password = user_creds.get('password', 'secret_sauce')
+    
+    login_page.login(username, password)
+    
+    # Verify login was successful
+    WebDriverWait(browser, env.timeout).until(
+        EC.url_contains("inventory.html")
+    )
+    
+    return browser
+
+
+# ----------------------------
+# Fixture: Login and return InventoryPage object
+# Reusable across multiple tests
+# ----------------------------
+@pytest.fixture
+def inventory_page(logged_in_browser):
+    """
+    Initialize the inventory page after login.
+    This fixture provides a pre-configured InventoryPage object.
+    """
+    return InventoryPage(logged_in_browser)
+
+
+# ----------------------------
+# Fixture: Test data manager
+# ----------------------------
+@pytest.fixture(scope="session")
+def test_data():
+    """Fixture to provide test data"""
+    from test_data.test_data import DataManager
+    return DataManager()

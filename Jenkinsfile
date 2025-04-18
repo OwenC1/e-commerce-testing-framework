@@ -1,15 +1,16 @@
 pipeline {
     agent any
-    
+
     environment {
-        // Get branch name to decide which tests to run
         BRANCH_NAME = "${env.GIT_BRANCH.contains('/') ? env.GIT_BRANCH.split('/')[1] : env.GIT_BRANCH}"
+        AWS_DEFAULT_REGION = 'eu-north-1'  // Change this to your region
+        ECR_REPO = '880757820656.dkr.ecr.eu-north-1.amazonaws.com/ecommerce-tests' // Replace with your actual ECR URI
+        IMAGE_TAG = "${env.BUILD_NUMBER}"
     }
-    
+
     stages {
         stage('Setup') {
             steps {
-                // First we set up our testing environment
                 sh '''
                     python3 -m venv venv
                     source venv/bin/activate
@@ -17,11 +18,10 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Run Tests') {
             steps {
                 script {
-                    // Choose which tests to run based on the branch
                     if (BRANCH_NAME == 'main') {
                         echo "Running all tests for main branch"
                         sh '''
@@ -50,16 +50,13 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Generate Reports') {
             steps {
-                // Create test reports
                 sh '''
                     source venv/bin/activate
                     pytest tests/ api_tests/ --html=reports/report.html -v
                 '''
-                
-                // Publish HTML reports
                 publishHTML([
                     allowMissing: false,
                     alwaysLinkToLastBuild: true,
@@ -70,14 +67,29 @@ pipeline {
                 ])
             }
         }
+
+        stage('Docker Build & Push to ECR') {
+            when {
+                branch 'main'  // Only push to ECR on main branch
+            }
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-ecr-creds']]) {
+                    sh '''
+                        aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REPO
+                        docker build -t $ECR_REPO:$IMAGE_TAG .
+                        docker push $ECR_REPO:$IMAGE_TAG
+                    '''
+                }
+            }
+        }
     }
-    
+
     post {
         success {
-            echo "All tests passed!"
+            echo "All tests passed and Docker image pushed to ECR!"
         }
         failure {
-            echo "Some tests failed, check the report for details."
+            echo "Something went wrong. Check the logs and test report."
         }
     }
 }
