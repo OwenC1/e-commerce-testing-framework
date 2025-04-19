@@ -1,20 +1,16 @@
-# Use the official Selenium image with Chrome preinstalled (headless + ARM-compatible)
-FROM selenium/standalone-chrome:120.0
+FROM --platform=linux/amd64 selenium/standalone-chrome:120.0
 
-# Set working directory
+USER root
 WORKDIR /app
 
-# Install Python and pip (already available in the base image, but ensure it's set)
+# Install Python pip & cleanup
 RUN apt-get update && apt-get install -y python3-pip && apt-get clean
 
-# Copy only requirements first to cache dependencies
+# Install dependencies
 COPY requirements.txt .
+RUN pip3 install -r requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Now copy your project files
+# Copy code
 COPY . .
 
-# Run tests (can be overridden)
-CMD ["pytest", "tests/ui_tests", "--html=reports/test_report.html", "--self-contained-html"]
+CMD ["pytest", "--maxfail=1", "--disable-warnings", "-v"]
