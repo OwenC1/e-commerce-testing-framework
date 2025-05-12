@@ -192,3 +192,27 @@ class InventoryPage(BasePage):
     
         # Use the click method from BasePage
          self.click(product_link_locator)
+         
+    def is_product_displayed(self, product_name):
+        """
+        Check if a product with the given name is displayed on the inventory page.
+        """
+        products = self.driver.find_elements(By.CLASS_NAME, "inventory_item_name")
+        return any(product.text == product_name for product in products)
+    
+    def logout(self):
+        # Step 1: Open sidebar
+        WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "react-burger-menu-btn"))
+        ).click()
+
+        # Step 2: Wait for the logout link
+        logout_link = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "logout_sidebar_link"))
+        )
+
+        # Step 3: Click logout
+        logout_link.click()
+
+        # Step 4: Hard wait for redirect to complete (1s fallback)
+        time.sleep(1)
